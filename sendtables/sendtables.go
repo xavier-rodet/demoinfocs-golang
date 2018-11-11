@@ -9,6 +9,8 @@ import (
 	bit "github.com/markus-wa/demoinfocs-golang/bitread"
 )
 
+//go:generate ifacemaker -f sendtables.go -s ServerClass -i IServerClass -p sendtables -D -y "IServerClass is an auto-generated interface for ServerClass." -c "DO NOT EDIT: Auto generated" -o server_class_interface.go
+
 // sendPropertyFlags stores multiple send property flags.
 type sendPropertyFlags int
 

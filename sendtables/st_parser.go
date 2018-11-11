@@ -11,6 +11,8 @@ import (
 	msg "github.com/markus-wa/demoinfocs-golang/msg"
 )
 
+//go:generate ifacemaker -f st_parser.go -s ServerClasses -i IServerClasses -p sendtables -D -y "IServerClasses is an auto-generated interface for ServerClasses." -c "DO NOT EDIT: Auto generated" -o server_classes_interface.go
+
 // SendTableParser provides functions for parsing send-tables.
 //
 // Intended for internal use only.

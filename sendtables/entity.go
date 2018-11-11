@@ -9,6 +9,9 @@ import (
 	bit "github.com/markus-wa/demoinfocs-golang/bitread"
 )
 
+//go:generate ifacemaker -f entity.go -s Entity -i IEntity -p sendtables -D -y "IEntity is an auto-generated interface for Entity." -c "DO NOT EDIT: Auto generated" -o entity_interface.go
+//go:generate ifacemaker -f entity.go -s Entity -i IProperty -p sendtables -D -y "IProperty is an auto-generated interface for IProperty." -c "DO NOT EDIT: Auto generated" -o property_interface.go
+
 // Entity stores a entity in the game (e.g. players etc.) with its properties.
 type Entity struct {
 	serverClass *ServerClass
