@@ -10,7 +10,6 @@ import (
 
 	bit "github.com/markus-wa/demoinfocs-golang/bitread"
 	common "github.com/markus-wa/demoinfocs-golang/common"
-	events "github.com/markus-wa/demoinfocs-golang/events"
 	msg "github.com/markus-wa/demoinfocs-golang/msg"
 	st "github.com/markus-wa/demoinfocs-golang/sendtables"
 )
@@ -69,7 +68,7 @@ type Parser struct {
 	gameEventDescs       map[int32]*msg.CSVCMsg_GameEventListDescriptorT // Maps game-event IDs to descriptors
 	grenadeModelIndices  map[int]common.EquipmentElement                 // Used to map model indices to grenades (used for grenade projectiles)
 	stringTables         []*msg.CSVCMsg_CreateStringTable                // Contains all created sendtables, needed when updating them
-	currentFlashEvents   []events.PlayerFlashed                          // Contains flash events that need to be dispatched at the end of a tick
+	currentGameEvents    []*msg.CSVCMsg_GameEvent                        // Contains events which need to be handled at the end of a tick
 }
 
 type bombsite struct {
@@ -238,7 +237,7 @@ func NewParserWithConfig(demostream io.Reader, config ParserConfig) *Parser {
 	// Attach proto msg handlers
 	p.msgDispatcher.RegisterHandler(p.handlePacketEntities)
 	p.msgDispatcher.RegisterHandler(p.handleGameEventList)
-	p.msgDispatcher.RegisterHandler(p.handleGameEvent)
+	p.msgDispatcher.RegisterHandler(p.storeGameEvent)
 	p.msgDispatcher.RegisterHandler(p.handleCreateStringTable)
 	p.msgDispatcher.RegisterHandler(p.handleUpdateStringTable)
 	p.msgDispatcher.RegisterHandler(p.handleUserMessage)

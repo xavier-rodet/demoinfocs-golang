@@ -186,8 +186,25 @@ func (p *Parser) bindNewPlayer(playerEntity *st.Entity) {
 	} else {
 		pl = common.NewPlayer()
 		p.gameState.playersByEntityID[playerIndex] = pl
-		pl.SteamID = -1
-		pl.Name = "unconnected"
+
+		rp := p.rawPlayers[playerIndex-1]
+		pl.Name = rp.name
+		pl.SteamID = rp.xuid
+		pl.IsBot = rp.isFakePlayer
+		pl.AdditionalPlayerInformation = &p.additionalPlayerInfo[pl.EntityID]
+
+		if pl.IsAlive() {
+			pl.LastAlivePosition = pl.Position
+		}
+
+		if p.gameState.playersByUserID[rp.userID] == nil {
+			p.gameState.playersByUserID[rp.userID] = pl
+			pl.UserID = rp.userID
+
+			if pl.SteamID != 0 {
+				p.eventDispatcher.Dispatch(events.PlayerConnect{Player: pl})
+			}
+		}
 	}
 
 	pl.EntityID = playerEntity.ID()
