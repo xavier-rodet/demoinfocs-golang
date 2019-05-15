@@ -26,7 +26,7 @@ func (p *Parser) parsePacket() {
 	// Booooring
 	// 152 bytes CommandInfo, 4 bytes SeqNrIn, 4 bytes SeqNrOut
 	// See at the bottom what the CommandInfo would contain if you are interested.
-	p.bitReader.Skip((152 + 4 + 4) << 3)
+	//p.bitReader.Skip((152 + 4 + 4) << 3)
 
 	// Here we go
 	p.bitReader.BeginChunk(p.bitReader.ReadSignedInt(32) << 3)

@@ -200,9 +200,9 @@ func (p *Parser) parseFrame() bool {
 	case dcDataTables:
 		p.msgDispatcher.SyncAllQueues()
 
-		p.bitReader.BeginChunk(p.bitReader.ReadSignedInt(32) << 3)
+		//p.bitReader.BeginChunk(p.bitReader.ReadSignedInt(32) << 3)
 		p.stParser.ParsePacket(p.bitReader)
-		p.bitReader.EndChunk()
+		//p.bitReader.EndChunk()
 
 		debugAllServerClasses(p.ServerClasses())
 
