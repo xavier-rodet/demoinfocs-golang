@@ -186,6 +186,11 @@ func newGameEventHandler(parser *Parser) gameEventHandler {
 }
 
 func (geh gameEventHandler) roundStart(data map[string]*msg.CSVCMsg_GameEventKeyT) {
+
+	// Thrown grenades could not be deleted at the end of the round (if they are thrown at the very end, they never get destroyed)
+	// So we clear them out when a new round start
+	geh.gameState().thrownGrenades = make(map[*common.Player][]*common.Equipment)
+
 	geh.dispatch(events.RoundStart{
 		TimeLimit: int(data["timelimit"].GetValLong()),
 		FragLimit: int(data["fraglimit"].GetValLong()),
@@ -396,9 +401,8 @@ func (geh gameEventHandler) infernoStartBurn(data map[string]*msg.CSVCMsg_GameEv
 }
 
 func (geh gameEventHandler) infernoExpire(data map[string]*msg.CSVCMsg_GameEventKeyT) {
-	nadeEvent := geh.nadeEvent(data, common.EqIncendiary)
 	geh.dispatch(events.FireGrenadeExpired{
-		GrenadeEvent: nadeEvent,
+		GrenadeEvent: geh.nadeEvent(data, common.EqIncendiary),
 	})
 }
 
