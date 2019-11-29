@@ -377,7 +377,6 @@ func (geh gameEventHandler) infernoStartBurn(data map[string]*msg.CSVCMsg_GameEv
 }
 
 func (geh gameEventHandler) infernoExpire(data map[string]*msg.CSVCMsg_GameEventKeyT) {
-
 	nadeEvent := geh.nadeEvent(data, common.EqIncendiary)
 	geh.dispatch(events.FireGrenadeExpired{
 		GrenadeEvent: nadeEvent,
@@ -579,7 +578,6 @@ func (geh gameEventHandler) nadeEvent(data map[string]*msg.CSVCMsg_GameEventKeyT
 }
 
 func (geh gameEventHandler) addThrownGrenade(p *common.Player, wep *common.Equipment) {
-
 	if p != nil {
 		gameState := geh.gameState()
 		gameState.thrownGrenades[p] = append(gameState.thrownGrenades[p], wep)
@@ -587,7 +585,6 @@ func (geh gameEventHandler) addThrownGrenade(p *common.Player, wep *common.Equip
 }
 
 func (geh gameEventHandler) getThrownGrenade(p *common.Player, wepType common.EquipmentElement) *common.Equipment {
-
 	if p != nil {
 		// Get the first weapon we found for this player with this weapon type
 		for _, thrownGrenade := range geh.gameState().thrownGrenades[p] {
@@ -603,9 +600,7 @@ func (geh gameEventHandler) getThrownGrenade(p *common.Player, wepType common.Eq
 }
 
 func (geh gameEventHandler) deleteThrownGrenade(p *common.Player, wepType common.EquipmentElement) {
-
 	if p != nil {
-
 		gameState := geh.gameState()
 
 		// Delete the first weapon we found with this weapon type
@@ -613,7 +608,6 @@ func (geh gameEventHandler) deleteThrownGrenade(p *common.Player, wepType common
 			// If same weapon type
 			// OR if it's an EqIncendiary we must check for EqMolotov too because of geh.infernoExpire() handling ?
 			if wepType == v.Weapon || (wepType == common.EqIncendiary && v.Weapon == common.EqMolotov) {
-
 				// Remove a specific key from the slice
 				slice := gameState.thrownGrenades[p]
 				gameState.thrownGrenades[p] = append(slice[:k], slice[k+1:]...)
@@ -623,7 +617,6 @@ func (geh gameEventHandler) deleteThrownGrenade(p *common.Player, wepType common
 }
 
 func (geh gameEventHandler) getEquipmentInstance(player *common.Player, wepType common.EquipmentElement) *common.Equipment {
-
 	isGrenade := wepType.Class() == common.EqClassGrenade
 	if isGrenade {
 		return geh.getThrownGrenade(player, wepType)
