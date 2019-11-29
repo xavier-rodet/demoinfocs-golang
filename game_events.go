@@ -596,6 +596,7 @@ func (geh gameEventHandler) getThrownGrenade(p *common.Player, wepType common.Eq
 
 	// If we didn't found the thrown grenade we send back a new Weapon of the correct type (so we don't break anything)
 	thrownGrenade := common.NewEquipment(wepType)
+
 	return &thrownGrenade
 }
 
@@ -645,6 +646,7 @@ func mapGameEventData(d *msg.CSVCMsg_GameEventListDescriptorT, e *msg.CSVCMsg_Ga
 	for i, k := range d.Keys {
 		data[k.Name] = e.Keys[i]
 	}
+
 	return data
 }
 
