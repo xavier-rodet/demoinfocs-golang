@@ -376,6 +376,8 @@ func (p *Parser) bindGrenadeProjectiles(entity *st.Entity) {
 	p.gameState.grenadeProjectiles[entityID] = proj
 
 	entity.OnCreateFinished(func() {
+		p.gameEventHandler.addThrownGrenade(proj.Thrower, proj.WeaponInstance)
+
 		p.eventDispatcher.Dispatch(events.GrenadeProjectileThrow{
 			Projectile: proj,
 		})
@@ -387,6 +389,9 @@ func (p *Parser) bindGrenadeProjectiles(entity *st.Entity) {
 
 	entity.FindPropertyI("m_nModelIndex").OnUpdate(func(val st.PropertyValue) {
 		proj.Weapon = p.grenadeModelIndices[val.IntVal]
+
+		equipment := common.NewEquipment(p.grenadeModelIndices[val.IntVal])
+		proj.WeaponInstance = &equipment
 	})
 
 	// @micvbang: not quite sure what the difference between Thrower and Owner is.
@@ -434,6 +439,12 @@ func (p *Parser) nadeProjectileDestroyed(proj *common.GrenadeProjectile) {
 
 	if proj.Weapon == common.EqFlash {
 		p.gameState.lastFlash.projectileByPlayer[proj.Owner] = proj
+  }
+
+	// We delete from the Owner.ThrownGrenades (only if not inferno, because for inferno grenades we will delete it at the end of FireGrenadeExpired)
+	isInferno := (proj.WeaponInstance.Weapon == common.EqMolotov || proj.WeaponInstance.Weapon == common.EqIncendiary)
+	if !isInferno {
+		p.gameEventHandler.deleteThrownGrenade(proj.Thrower, proj.WeaponInstance.Weapon)
 	}
 }
 
@@ -539,6 +550,8 @@ func (p *Parser) infernoExpired(inf *common.Inferno) {
 	})
 
 	delete(p.gameState.infernos, inf.EntityID)
+
+	p.gameEventHandler.deleteThrownGrenade(inf.Thrower(), common.EqIncendiary)
 }
 
 func (p *Parser) bindGameRules() {

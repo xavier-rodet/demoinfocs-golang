@@ -186,6 +186,11 @@ func newGameEventHandler(parser *Parser) gameEventHandler {
 }
 
 func (geh gameEventHandler) roundStart(data map[string]*msg.CSVCMsg_GameEventKeyT) {
+
+	// Thrown grenades could not be deleted at the end of the round (if they are thrown at the very end, they never get destroyed)
+	// So we clear them out when a new round start
+	geh.gameState().thrownGrenades = make(map[*common.Player][]*common.Equipment)
+
 	geh.dispatch(events.RoundStart{
 		TimeLimit: int(data["timelimit"].GetValLong()),
 		FragLimit: int(data["fraglimit"].GetValLong()),
@@ -307,7 +312,7 @@ func (geh gameEventHandler) playerDeath(data map[string]*msg.CSVCMsg_GameEventKe
 		Assister:          geh.playerByUserID32(data["assister"].GetValShort()),
 		IsHeadshot:        data["headshot"].GetValBool(),
 		PenetratedObjects: int(data["penetrated"].GetValShort()),
-		Weapon:            getPlayerWeapon(killer, wepType),
+		Weapon:            geh.getEquipmentInstance(killer, wepType),
 	})
 }
 
@@ -323,7 +328,7 @@ func (geh gameEventHandler) playerHurt(data map[string]*msg.CSVCMsg_GameEventKey
 		HealthDamage: int(data["dmg_health"].GetValShort()),
 		ArmorDamage:  int(data["dmg_armor"].GetValByte()),
 		HitGroup:     events.HitGroup(data["hitgroup"].GetValByte()),
-		Weapon:       getPlayerWeapon(attacker, wepType),
+		Weapon:       geh.getEquipmentInstance(attacker, wepType),
 	})
 }
 
@@ -583,18 +588,66 @@ func (geh gameEventHandler) nadeEvent(data map[string]*msg.CSVCMsg_GameEventKeyT
 
 	return events.GrenadeEvent{
 		GrenadeType:     nadeType,
+		Grenade:         geh.getThrownGrenade(thrower, nadeType),
 		Thrower:         thrower,
 		Position:        position,
 		GrenadeEntityID: nadeEntityID,
 	}
 }
 
-func mapGameEventData(d *msg.CSVCMsg_GameEventListDescriptorT, e *msg.CSVCMsg_GameEvent) map[string]*msg.CSVCMsg_GameEventKeyT {
-	data := make(map[string]*msg.CSVCMsg_GameEventKeyT)
-	for i, k := range d.Keys {
-		data[k.Name] = e.Keys[i]
+func (geh gameEventHandler) addThrownGrenade(p *common.Player, wep *common.Equipment) {
+	if p != nil {
+		gameState := geh.gameState()
+		gameState.thrownGrenades[p] = append(gameState.thrownGrenades[p], wep)
 	}
-	return data
+}
+
+func (geh gameEventHandler) getThrownGrenade(p *common.Player, wepType common.EquipmentElement) *common.Equipment {
+	if p != nil {
+		// Get the first weapon we found for this player with this weapon type
+		for _, thrownGrenade := range geh.gameState().thrownGrenades[p] {
+			if thrownGrenade.Weapon == wepType {
+				return thrownGrenade
+			}
+		}
+	}
+
+	// If we didn't found the thrown grenade we send back a new Weapon of the correct type (so we don't break anything)
+	thrownGrenade := common.NewEquipment(wepType)
+
+	return &thrownGrenade
+}
+
+func (geh gameEventHandler) deleteThrownGrenade(p *common.Player, wepType common.EquipmentElement) {
+	if p != nil {
+		gameState := geh.gameState()
+
+		// Delete the first weapon we found with this weapon type
+		throwGrenades := gameState.thrownGrenades[p]
+		for index, weapon := range throwGrenades {
+			// If we found the same weapon type
+			// OR if it's an EqIncendiary we must check for EqMolotov too because of geh.infernoExpire() handling ?
+			if wepType == weapon.Weapon || (wepType == common.EqIncendiary && weapon.Weapon == common.EqMolotov) {
+				// Remove a specific index from the slice : https://github.com/golang/go/wiki/SliceTricks#delete-without-preserving-order
+				// Note: We are using the example for pointer elements to avoid memory leak
+				throwGrenades[index] = throwGrenades[len(throwGrenades)-1]
+				throwGrenades[len(throwGrenades)-1] = nil
+				throwGrenades = throwGrenades[:len(throwGrenades)-1]
+				gameState.thrownGrenades[p] = throwGrenades
+
+				break // We only delete one
+			}
+		}
+	}
+}
+
+func (geh gameEventHandler) getEquipmentInstance(player *common.Player, wepType common.EquipmentElement) *common.Equipment {
+	isGrenade := wepType.Class() == common.EqClassGrenade
+	if isGrenade {
+		return geh.getThrownGrenade(player, wepType)
+	}
+
+	return getPlayerWeapon(player, wepType)
 }
 
 // Returns the players instance of the weapon if applicable or a new instance otherwise.
@@ -610,6 +663,15 @@ func getPlayerWeapon(player *common.Player, wepType common.EquipmentElement) *co
 
 	wep := common.NewEquipment(wepType)
 	return &wep
+}
+
+func mapGameEventData(d *msg.CSVCMsg_GameEventListDescriptorT, e *msg.CSVCMsg_GameEvent) map[string]*msg.CSVCMsg_GameEventKeyT {
+	data := make(map[string]*msg.CSVCMsg_GameEventKeyT)
+	for i, k := range d.Keys {
+		data[k.Name] = e.Keys[i]
+	}
+
+	return data
 }
 
 // We're all better off not asking questions
