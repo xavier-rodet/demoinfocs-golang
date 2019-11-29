@@ -24,9 +24,9 @@ type GameState struct {
 	gamePhase          common.GamePhase
 	isWarmupPeriod     bool
 	isMatchStarted     bool
-	lastFlash          lastFlash      // Information about the last flash that exploded, used to find the attacker and projectile for player_blind events
-	currentDefuser     *common.Player // Player currently defusing the bomb, if any
-	currentPlanter     *common.Player // Player currently planting the bomb, if any
+	lastFlash          lastFlash                              // Information about the last flash that exploded, used to find the attacker and projectile for player_blind events
+	currentDefuser     *common.Player                         // Player currently defusing the bomb, if any
+	currentPlanter     *common.Player                         // Player currently planting the bomb, if any
 	thrownGrenades     map[*common.Player][]*common.Equipment // Information about every player's thrown grenades (from the moment they are thrown to the moment their effect is ended)
 }
 

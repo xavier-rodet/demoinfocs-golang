@@ -439,11 +439,13 @@ func (p *Parser) nadeProjectileDestroyed(proj *common.GrenadeProjectile) {
 
 	if proj.Weapon == common.EqFlash {
 		p.gameState.lastFlash.projectileByPlayer[proj.Owner] = proj
-  }
+	}
 
-	// We delete from the Owner.ThrownGrenades (only if not inferno, because for inferno grenades we will delete it at the end of FireGrenadeExpired)
-	isInferno := (proj.WeaponInstance.Weapon == common.EqMolotov || proj.WeaponInstance.Weapon == common.EqIncendiary)
-	if !isInferno {
+	// We delete from the Owner.ThrownGrenades (only if not inferno or smoke, because they will be deleted when they expire)
+	isInferno := proj.WeaponInstance.Weapon == common.EqMolotov || proj.WeaponInstance.Weapon == common.EqIncendiary
+	isSmoke := proj.WeaponInstance.Weapon == common.EqSmoke
+	isDecoy := proj.WeaponInstance.Weapon == common.EqDecoy
+	if !isInferno && !isSmoke && !isDecoy {
 		p.gameEventHandler.deleteThrownGrenade(proj.Thrower, proj.WeaponInstance.Weapon)
 	}
 }
